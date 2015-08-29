@@ -1,0 +1,59 @@
+Printed process ids < A.B.C > are composed of 6:
+
+A, the node number (0 is the local node, an arbitrary number for a remote node)
+B, the first 15 bits of the process number (an index into the process table) 7
+C, bits 16-18 of the process number (the same process number as B) 7
+Internally, the process number is 28 bits wide on the 32 bit emulator. 
+The odd definition of B and C comes from R9B and earlier versions of Erlang in which B was a 15bit process ID and C was a wrap counter incremented when the max process ID was reached and lower IDs were reused.
+
+In the erlang distribution PIDs are a little larger as they include the node atom as well as the other information. (Distributed PID format)
+
+When an internal PID is sent from one node to the other, it's automatically converted to the external/distributed PID form, so what might be <0.10.0> (inet_db) on one node might end up as <2265.10.0> when sent to another node. You can just send to these PIDs as normal.
+
+% get the PID of the user server on OtherNode
+RemoteUser = rpc:call(OtherNode, erlang,whereis,[user]), 
+
+true = is_pid(RemoteUser),
+
+% send message to remote PID
+RemoteUser ! ignore_this, 
+
+% print "Hello from <nodename>\n" on the remote node's console.
+io:format(RemoteUser, "Hello from ~p~n", [node()]). 
+
+PID:
+Port Identifier
+
+BIF: Binary Information Format:
+self() returns the pid of the calling process.
+
+spawn(Module, Name, Args) -> pid()
+  Module = Name = atom()
+  Args = [Arg1,...,ArgN]
+    ArgI = term()
+The new process will start executing in Module:Name(Arg1,...,ArgN) where the arguments is the elements of the (possible empty) Args argument list.
+
+There exist a number of other spawn BIFs, for example spawn/4 for spawning a process at another node.
+
+12.3  Registered Processes
+
+Besides addressing a process by using its pid, there are also BIFs for registering a process under a name. 
+The name must be an atom and is automatically unregistered if the process terminates:
+
+register(Name, Pid)	Associates the name Name, an atom, with the process Pid.
+registered()	Returns a list of names which have been registered usingregister/2.
+whereis(Name)	Returns the pid registered under Name, orundefinedif the name is not registered.
+----Name Registration BIFs
+
+Receives messages sent to the process using the send operator (!).
+ The patterns Pattern are sequentially matched against the first message in time order in the mailbox, then the second, and so on. 
+ If a match succeeds and the optional guard sequence GuardSeq is true, the corresponding Body is evaluated. 
+ The matching message is consumed, that is removed from the mailbox, while any other messages in the mailbox remain unchanged.
+
+The return value of Body is the return value of the receive expression.
+
+receive never fails. Execution is suspended, possibly indefinitely, until a message arrives that does match one of the patterns and with a true guard sequence.
+
+
+
+
